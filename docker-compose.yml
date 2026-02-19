@@ -67,11 +67,27 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123456}
       S3_BUCKET: ${S3_BUCKET:-pdfs}
     entrypoint: ["/bin/sh", "-c"]
-    command: >
-      mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
-      mc mb -p local/"$$S3_BUCKET" || true &&
-      mc anonymous set none local/"$$S3_BUCKET" || true &&
-      echo "MinIO bucket ready: $$S3_BUCKET"
+    command: |
+      echo "Waiting 3 seconds for MinIO to stabilize..."
+      sleep 3
+
+      echo "Attempting to connect..."
+      for i in 1 2 3 4 5; do
+        if mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; then
+          echo "✅ Connected to MinIO successfully!"
+          break
+        fi
+        echo "⚠️ Attempt $$i failed. Retrying in 2 seconds..."
+        sleep 2
+      done
+
+      echo "Creating bucket..."
+      mc mb -p local/"$$S3_BUCKET" || true
+
+      echo "Setting bucket permissions..."
+      mc anonymous set none local/"$$S3_BUCKET" || true
+
+      echo "🎉 Initialization complete!"
     restart: "no"
 
   api:
@@ -183,3 +199,4 @@ volumes:
   api_node_modules:
   worker_node_modules:
   web_node_modules:
+
