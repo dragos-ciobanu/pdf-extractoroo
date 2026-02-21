@@ -66,28 +66,21 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio123456}
       S3_BUCKET: ${S3_BUCKET:-pdfs}
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      echo "Waiting 3 seconds for MinIO to stabilize..."
-      sleep 3
-
-      echo "Attempting to connect..."
-      for i in 1 2 3 4 5; do
-        if mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; then
-          echo "✅ Connected to MinIO successfully!"
-          break
-        fi
-        echo "⚠️ Attempt $$i failed. Retrying in 2 seconds..."
-        sleep 2
-      done
-
-      echo "Creating bucket..."
-      mc mb -p local/"$$S3_BUCKET" || true
-
-      echo "Setting bucket permissions..."
-      mc anonymous set none local/"$$S3_BUCKET" || true
-
-      echo "🎉 Initialization complete!"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -x 
+        echo "Connecting to MinIO..."
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        
+        echo "Creating bucket..."
+        mc mb -p local/"$$S3_BUCKET"
+        
+        echo "Setting bucket permissions..."
+        mc anonymous set none local/"$$S3_BUCKET"
+        
+        echo "🎉 Initialization complete!"
     restart: "no"
 
   api:
@@ -129,7 +122,7 @@ services:
       - ./apps/api:/app
       - api_node_modules:/app/node_modules
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT}/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${PORT}/healthz || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 30
