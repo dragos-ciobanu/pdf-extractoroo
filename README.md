@@ -24,6 +24,7 @@ Before running the application, ensure you have the following installed:
 - **Docker Compose**: v2.0 or higher
 - **Make**: Optional, but recommended for convenience commands
 - **Git**: For cloning the repository
+- **Node.js 20+**: Needed only to run tests
 
 ## Quick Start
 
@@ -101,6 +102,14 @@ make db-seed
 
 # Generate Prisma client
 make db-generate
+```
+
+### Run tests
+After running the stack run:
+```
+npm ci
+npx playwright install --with-deps
+API_BASE_URL=http://localhost:3000 npx playwright test -c tests/playwright.config.ts
 ```
 
 ### Cleanup

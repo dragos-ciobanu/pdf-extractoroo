@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test:api": "playwright test -c tests/playwright.config.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}
